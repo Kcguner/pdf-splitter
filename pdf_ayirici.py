@@ -12,8 +12,8 @@ class PdfAyiriciApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("PDF Ayırıcı - Sayfa Sayfa Böl")
-        self.geometry("720x620")
-        self.minsize(680, 580)
+        self.geometry("720x700")
+        self.minsize(680, 640)
         self.pdf_dosyalari = []
         self.cikti_klasoru = str(Path.home() / "Desktop")
 
@@ -22,16 +22,30 @@ class PdfAyiriciApp(ctk.CTk):
     def _build_ui(self):
         # Header
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.pack(fill="x", padx=24, pady=(20, 10))
+        header.pack(side="top", fill="x", padx=24, pady=(16, 8))
 
         title = ctk.CTkLabel(header, text="PDF Ayırıcı", font=ctk.CTkFont(size=24, weight="bold"))
         title.pack(anchor="w")
         subtitle = ctk.CTkLabel(header, text="PDF'lerinizi tek tıkla sayfa sayfa ayırın", text_color="gray50", font=ctk.CTkFont(size=13))
         subtitle.pack(anchor="w", pady=(2,0))
 
-        # Card - Dosya seçimi
+        # Alt buton - Ayır (ÖNCE pack'lenir ki her zaman görünür kalsın,
+        # pencere küçük / ekran ölçeği büyük olsa bile alttan taşmasın)
+        bottom = ctk.CTkFrame(self, fg_color="transparent")
+        bottom.pack(side="bottom", fill="x", padx=20, pady=(8, 14))
+        self.btn_ayir = ctk.CTkButton(bottom, text="✂   PDF'leri Ayır", height=46, corner_radius=12,
+                                      font=ctk.CTkFont(size=15, weight="bold"),
+                                      fg_color="#2563EB", hover_color="#1D4ED8",
+                                      command=self.ayir_baslat)
+        self.btn_ayir.pack(fill="x")
+
+        hint = ctk.CTkLabel(bottom, text="İpucu: Birden fazla PDF seçip toplu ayırma yapabilirsiniz.",
+                            text_color="gray50", font=ctk.CTkFont(size=11))
+        hint.pack(pady=(6,0))
+
+        # Card - Dosya seçimi (kalan alanı doldurur, küçülürse iç liste küçülür)
         card = ctk.CTkFrame(self, corner_radius=16)
-        card.pack(fill="both", expand=True, padx=20, pady=12)
+        card.pack(side="top", fill="both", expand=True, padx=20, pady=(4, 4))
 
         # Üst butonlar
         top_btn_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -51,9 +65,9 @@ class PdfAyiriciApp(ctk.CTk):
         self.lbl_sayi = ctk.CTkLabel(top_btn_frame, text="0 dosya seçili", text_color="gray50", font=ctk.CTkFont(size=12))
         self.lbl_sayi.pack(side="right", padx=8)
 
-        # Dosya listesi
-        self.scroll = ctk.CTkScrollableFrame(card, height=210, corner_radius=10, fg_color="#F5F5F7")
-        self.scroll.pack(fill="both", expand=False, padx=18, pady=6)
+        # Dosya listesi (esnek yükseklik: pencere küçülünce önce bu daralır)
+        self.scroll = ctk.CTkScrollableFrame(card, height=160, corner_radius=10, fg_color="#F5F5F7")
+        self.scroll.pack(fill="both", expand=True, padx=18, pady=6)
         self._bos_mesaj = ctk.CTkLabel(self.scroll, text="Henüz PDF eklenmedi.\n'PDF Ekle' ile başlayın veya birden fazla PDF seçebilirsiniz.",
                                        text_color="gray50", font=ctk.CTkFont(size=12), justify="center")
         self._bos_mesaj.pack(pady=40)
@@ -82,29 +96,16 @@ class PdfAyiriciApp(ctk.CTk):
 
         # Progress + Log
         self.progress = ctk.CTkProgressBar(card, height=8, corner_radius=4)
-        self.progress.pack(fill="x", padx=18, pady=(14,8))
+        self.progress.pack(fill="x", padx=18, pady=(10, 6))
         self.progress.set(0)
 
         self.lbl_durum = ctk.CTkLabel(card, text="Hazır", text_color="gray50", font=ctk.CTkFont(size=11))
         self.lbl_durum.pack(anchor="w", padx=18)
 
-        self.log = ctk.CTkTextbox(card, height=90, corner_radius=10, fg_color="#FAFAFA", text_color="#333",
+        self.log = ctk.CTkTextbox(card, height=70, corner_radius=10, fg_color="#FAFAFA", text_color="#333",
                                   font=ctk.CTkFont(size=11))
         self.log.pack(fill="x", padx=18, pady=(6, 12))
         self.log.configure(state="disabled")
-
-        # Alt buton - Ayır
-        bottom = ctk.CTkFrame(self, fg_color="transparent")
-        bottom.pack(fill="x", padx=20, pady=(0,18))
-        self.btn_ayir = ctk.CTkButton(bottom, text="✂   PDF'leri Ayır", height=46, corner_radius=12,
-                                      font=ctk.CTkFont(size=15, weight="bold"),
-                                      fg_color="#2563EB", hover_color="#1D4ED8",
-                                      command=self.ayir_baslat)
-        self.btn_ayir.pack(fill="x")
-
-        hint = ctk.CTkLabel(bottom, text="İpucu: Birden fazla PDF seçip toplu ayırma yapabilirsiniz.",
-                            text_color="gray50", font=ctk.CTkFont(size=11))
-        hint.pack(pady=(6,0))
 
     def log_yaz(self, msg):
         self.log.configure(state="normal")

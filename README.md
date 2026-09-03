@@ -27,8 +27,7 @@
 
 ## 🖼️ Ekran Görüntüsü
 
-> Uygulamayı çalıştırıp ekran görüntüsü alıp buraya ekleyebilirsiniz:
-> `assets/screenshot.png`
+![PDF Ayırıcı](assets/screenshot.png)
 
 ```
 PDF Ayırıcı
