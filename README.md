@@ -65,8 +65,8 @@ Desktop/
 ### 1. Run from source
 
 ```bash
-git clone https://github.com/Kcguner/pdf-ayirici.git
-cd pdf-ayirici
+git clone https://github.com/Kcguner/pdf-splitter.git
+cd pdf-splitter
 
 # (recommended) virtual environment
 python -m venv venv
@@ -203,8 +203,8 @@ Masaüstü/
 ### 1. Kaynaktan çalıştırma
 
 ```bash
-git clone https://github.com/Kcguner/pdf-ayirici.git
-cd pdf-ayirici
+git clone https://github.com/Kcguner/pdf-splitter.git
+cd pdf-splitter
 
 # (önerilir) sanal ortam
 python -m venv venv
