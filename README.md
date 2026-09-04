@@ -22,6 +22,8 @@
 - 👀 **Sayfa önizleme** — Listeye ekler eklemez sayfa sayısını görün
 - 📊 **Canlı ilerleme** — Progress bar + durum logu
 - 🧵 **Donmayan arayüz** — Ayırma işlemi arka planda (threading) çalışır
+- 🌙 **Koyu / Açık tema** — Sağ üstteki anahtarla tek tıkla değişir, seçim hatırlanır
+- 🌍 **5 dil desteği** — Türkçe, English, Deutsch, Français, Español (sağ üstten seçilir, seçim hatırlanır)
 - 🔒 **Şifreli PDF koruması** — Şifreli dosyalar atlanır, program çökmez
 - 🎨 **Modern UI** — CustomTkinter ile temiz, açık tema arayüz (Türkçe)
 
