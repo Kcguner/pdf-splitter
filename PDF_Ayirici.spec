@@ -1,12 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+# tkinterdnd2 (surukle-birak) dosyalarini exe'ye gom
+try:
+    from PyInstaller.utils.hooks import collect_all
+    _tkdnd_datas, _tkdnd_binaries, _tkdnd_hidden = collect_all('tkinterdnd2')
+except Exception:
+    _tkdnd_datas, _tkdnd_binaries, _tkdnd_hidden = [], [], []
+
 
 a = Analysis(
     ['pdf_ayirici.py'],
     pathex=[],
-    binaries=[],
-    datas=[],
-    hiddenimports=[],
+    binaries=_tkdnd_binaries,
+    datas=_tkdnd_datas,
+    hiddenimports=_tkdnd_hidden,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

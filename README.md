@@ -21,6 +21,9 @@
 ## ✨ Features
 
 - 📄 **Page-by-page splitting** — `report.pdf` → `report_page_1.pdf`, `report_page_2.pdf`, ...
+- ✂️ **Split modes** — Page by page, every N pages, or custom ranges (`1-5, 8, 10-12`)
+- 🖱️ **Drag & drop** — Drop PDF files onto the window to add them
+- 📂 **Open output folder** — One-click button, and your last folder is remembered
 - 📦 **Batch processing** — Select multiple PDFs and split them in one go
 - 📁 **Smart output** — Automatic `name_pages/` folder per PDF (optional)
 - 👀 **Page preview** — See the page count as soon as you add files
@@ -96,9 +99,9 @@ pyinstaller PDF_Ayirici.spec
 
 ## 📖 Usage
 
-1. Press **Add PDF**, select one or more PDFs
-2. Choose the **output folder** (default: Desktop)
-3. Optionally keep **"Create a separate folder per PDF"** enabled
+1. Press **Add PDF** (or drag & drop files onto the window), select one or more PDFs
+2. Choose the **output folder** (default: Desktop) — 📂 opens it in Explorer
+3. Pick a **split mode**: page by page, every N pages, or a custom range
 4. Press **Split PDFs** — done! 🎉
 
 ## 🛠️ Project Structure
@@ -151,6 +154,9 @@ If it helped you, leave a star — it motivates! ⭐
 ## ✨ Özellikler
 
 - 📄 **Sayfa sayfa bölme** — `rapor.pdf` → `rapor_sayfa_1.pdf`, `rapor_sayfa_2.pdf`, ...
+- ✂️ **Bölme modları** — Sayfa sayfa, her N sayfada veya özel aralık (`1-5, 8, 10-12`)
+- 🖱️ **Sürükle-bırak** — PDF'leri pencereye sürükleyip listeye ekleme
+- 📂 **Klasörü aç** — Tek tıkla çıktı klasörü, son klasör hatırlanır
 - 📦 **Toplu işlem** — Birden fazla PDF seçip tek seferde ayırın
 - 📁 **Akıllı çıktı** — Her PDF için otomatik `ad_sayfalar/` klasörü (isteğe bağlı)
 - 👀 **Sayfa önizleme** — Listeye ekler eklemez sayfa sayısını görün
@@ -226,9 +232,9 @@ pyinstaller PDF_Ayirici.spec
 
 ## 📖 Kullanım
 
-1. **PDF Ekle** butonuna basın, bir veya birden fazla PDF seçin
-2. **Çıkış klasörü** seçin (varsayılan: Masaüstü)
-3. Dilerseniz **"Her PDF için ayrı klasör oluştur"** seçeneğini açık bırakın
+1. **PDF Ekle** butonuna basın (veya dosyaları pencereye sürükleyip bırakın)
+2. **Çıkış klasörü** seçin (varsayılan: Masaüstü) — 📂 ile dosya gezgininde açılır
+3. **Bölme modu** seçin: sayfa sayfa, her N sayfada veya özel aralık
 4. **PDF'leri Ayır** butonuna basın — bitti! 🎉
 
 ## 🤝 Katkıda Bulunma
