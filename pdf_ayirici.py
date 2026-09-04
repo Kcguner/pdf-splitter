@@ -7,6 +7,13 @@ from pathlib import Path
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 from pypdf import PdfReader, PdfWriter
+from PIL import Image
+from io import BytesIO
+
+try:
+    import pymupdf
+except Exception:
+    pymupdf = None
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -25,7 +32,7 @@ LANGS = {
     "es": "Español",
 }
 LANG_BY_NAME = {v: k for k, v in LANGS.items()}
-MODES = ["all", "chunk", "range"]
+MODES = ["all", "chunk", "range", "merge"]
 
 STRINGS = {
     "tr": {
@@ -86,6 +93,17 @@ STRINGS = {
         "fname_pages": "sayfalar",
         "fname_part": "bolum",
         "fname_range": "aralik",
+        "mode_merge": "Birleştir",
+        "merge_btn": "🔗   PDF'leri Birleştir",
+        "merge_file": "Dosya adı:",
+        "merge_hint": "Sıra listedeki sıradır (↑ ↓ ile değiştirin).",
+        "merge_default": "birlesen.pdf",
+        "err_need_two": "Birleştirmek için en az 2 PDF seçin.",
+        "log_merged": "✓ Birleştirildi: {n} PDF, {pages} sayfa → {dest}",
+        "preview_title": "Önizleme: {name}",
+        "preview_loading": "Sayfalar yükleniyor...",
+        "preview_more": "+{n} sayfa daha",
+        "err_preview": "Önizleme oluşturulamadı.",
     },
     "en": {
         "window_title": "PDF Splitter - Split Page by Page",
@@ -145,6 +163,17 @@ STRINGS = {
         "fname_pages": "pages",
         "fname_part": "part",
         "fname_range": "range",
+        "mode_merge": "Merge",
+        "merge_btn": "🔗   Merge PDFs",
+        "merge_file": "File name:",
+        "merge_hint": "Order follows the list (reorder with ↑ ↓).",
+        "merge_default": "merged.pdf",
+        "err_need_two": "Select at least 2 PDFs to merge.",
+        "log_merged": "✓ Merged: {n} PDFs, {pages} pages → {dest}",
+        "preview_title": "Preview: {name}",
+        "preview_loading": "Loading pages...",
+        "preview_more": "+{n} more pages",
+        "err_preview": "Could not render preview.",
     },
     "de": {
         "window_title": "PDF Trenner - Seite für Seite teilen",
@@ -204,6 +233,17 @@ STRINGS = {
         "fname_pages": "seiten",
         "fname_part": "teil",
         "fname_range": "bereich",
+        "mode_merge": "Zusammenfügen",
+        "merge_btn": "🔗   PDFs zusammenfügen",
+        "merge_file": "Dateiname:",
+        "merge_hint": "Reihenfolge wie in der Liste (mit ↑ ↓ ändern).",
+        "merge_default": "zusammengefuegt.pdf",
+        "err_need_two": "Wählen Sie zum Zusammenfügen mindestens 2 PDFs.",
+        "log_merged": "✓ Zusammengefügt: {n} PDFs, {pages} Seiten → {dest}",
+        "preview_title": "Vorschau: {name}",
+        "preview_loading": "Seiten werden geladen...",
+        "preview_more": "+{n} weitere Seiten",
+        "err_preview": "Vorschau konnte nicht erstellt werden.",
     },
     "fr": {
         "window_title": "Diviseur PDF - Page par page",
@@ -263,6 +303,17 @@ STRINGS = {
         "fname_pages": "pages",
         "fname_part": "partie",
         "fname_range": "plage",
+        "mode_merge": "Fusionner",
+        "merge_btn": "🔗   Fusionner les PDF",
+        "merge_file": "Nom du fichier :",
+        "merge_hint": "L'ordre suit la liste (réordonnez avec ↑ ↓).",
+        "merge_default": "fusionne.pdf",
+        "err_need_two": "Sélectionnez au moins 2 PDF à fusionner.",
+        "log_merged": "✓ Fusionné : {n} PDF, {pages} pages → {dest}",
+        "preview_title": "Aperçu : {name}",
+        "preview_loading": "Chargement des pages...",
+        "preview_more": "+{n} pages de plus",
+        "err_preview": "Impossible de générer l'aperçu.",
     },
     "es": {
         "window_title": "Divisor de PDF - Página por página",
@@ -322,6 +373,17 @@ STRINGS = {
         "fname_pages": "paginas",
         "fname_part": "parte",
         "fname_range": "rango",
+        "mode_merge": "Combinar",
+        "merge_btn": "🔗   Combinar PDF",
+        "merge_file": "Nombre:",
+        "merge_hint": "El orden sigue la lista (reordena con ↑ ↓).",
+        "merge_default": "combinado.pdf",
+        "err_need_two": "Selecciona al menos 2 PDF para combinar.",
+        "log_merged": "✓ Combinado: {n} PDF, {pages} páginas → {dest}",
+        "preview_title": "Vista previa: {name}",
+        "preview_loading": "Cargando páginas...",
+        "preview_more": "+{n} páginas más",
+        "err_preview": "No se pudo generar la vista previa.",
     },
 }
 
@@ -554,6 +616,16 @@ class PdfAyiriciApp(ctk.CTk, TkinterDnD.DnDWrapper if TkinterDnD else object):
         self.range_row = ctk.CTkFrame(self.dynamic, fg_color="transparent")
         self.entry_range = ctk.CTkEntry(self.range_row, placeholder_text="", height=32, corner_radius=8)
         self.entry_range.pack(fill="x")
+        self.merge_row = ctk.CTkFrame(self.dynamic, fg_color="transparent")
+        merge_top = ctk.CTkFrame(self.merge_row, fg_color="transparent")
+        merge_top.pack(fill="x")
+        self.lbl_merge = ctk.CTkLabel(merge_top, text="", font=ctk.CTkFont(size=12))
+        self.lbl_merge.pack(side="left", padx=(0, 8))
+        self.entry_merge = ctk.CTkEntry(merge_top, width=220, height=32, corner_radius=8)
+        self.entry_merge.pack(side="left", fill="x", expand=True)
+        self.lbl_merge_hint = ctk.CTkLabel(self.merge_row, text="",
+                                           text_color="gray50", font=ctk.CTkFont(size=11))
+        self.lbl_merge_hint.pack(anchor="w", pady=(4, 0))
 
         # Progress + Log
         self.progress = ctk.CTkProgressBar(card, height=8, corner_radius=4)
@@ -601,11 +673,16 @@ class PdfAyiriciApp(ctk.CTk, TkinterDnD.DnDWrapper if TkinterDnD else object):
         self.lbl_ornek.configure(text=self.t("example"))
         self.lbl_hint.configure(text=self.t("hint"))
         self.lbl_mode.configure(text=self.t("mode_label"))
-        vals = [self.t("mode_all"), self.t("mode_chunk"), self.t("mode_range")]
+        vals = [self.t("mode_all"), self.t("mode_chunk"), self.t("mode_range"), self.t("mode_merge")]
         self.seg.configure(values=vals)
         self.seg.set(vals[MODES.index(self.mode)])
         self.lbl_chunk.configure(text=self.t("chunk_label"))
         self.entry_range.configure(placeholder_text=self.t("range_placeholder"))
+        self.lbl_merge.configure(text=self.t("merge_file"))
+        self.lbl_merge_hint.configure(text=self.t("merge_hint"))
+        if not self.entry_merge.get().strip():
+            self.entry_merge.delete(0, "end")
+            self.entry_merge.insert(0, self.t("merge_default"))
         self.switch_theme.configure(
             text=self.t("dark_mode") if self.theme == "dark" else self.t("light_mode")
         )
@@ -617,7 +694,7 @@ class PdfAyiriciApp(ctk.CTk, TkinterDnD.DnDWrapper if TkinterDnD else object):
         self.liste_guncelle()
 
     def on_mode_change(self, value):
-        vals = [self.t("mode_all"), self.t("mode_chunk"), self.t("mode_range")]
+        vals = [self.t("mode_all"), self.t("mode_chunk"), self.t("mode_range"), self.t("mode_merge")]
         try:
             self.mode = MODES[vals.index(value)]
         except ValueError:
@@ -625,15 +702,18 @@ class PdfAyiriciApp(ctk.CTk, TkinterDnD.DnDWrapper if TkinterDnD else object):
         self._update_mode_rows()
 
     def _update_mode_rows(self):
+        for r in (self.chunk_row, self.range_row, self.merge_row):
+            r.pack_forget()
         if self.mode == "chunk":
-            self.range_row.pack_forget()
             self.chunk_row.pack(fill="x", pady=(4, 0))
         elif self.mode == "range":
-            self.chunk_row.pack_forget()
             self.range_row.pack(fill="x", pady=(4, 0))
-        else:
-            self.chunk_row.pack_forget()
-            self.range_row.pack_forget()
+        elif self.mode == "merge":
+            self.merge_row.pack(fill="x", pady=(4, 0))
+        if not self._islem_sirada:
+            self.btn_ayir.configure(
+                text=self.t("merge_btn") if self.mode == "merge" else self.t("split")
+            )
 
     def toggle_theme(self):
         self.theme = "dark" if self.var_dark.get() else "light"
@@ -759,17 +839,124 @@ class PdfAyiriciApp(ctk.CTk, TkinterDnD.DnDWrapper if TkinterDnD else object):
             ctk.CTkButton(row, text="✕", width=32, height=26, corner_radius=8,
                           fg_color=c["del_fg"], text_color=c["del_text"], hover_color=c["del_hover"],
                           font=ctk.CTkFont(size=12, weight="bold"),
-                          command=lambda i=idx: self.dosya_sil(i)).pack(side="right", padx=8)
+                          command=lambda i=idx: self.dosya_sil(i)).pack(side="right", padx=(0, 8))
+            ctk.CTkButton(row, text="↓", width=30, height=26, corner_radius=8,
+                          fg_color=c["del_fg"], text_color=c["del_text"], hover_color=c["del_hover"],
+                          font=ctk.CTkFont(size=12, weight="bold"),
+                          command=lambda i=idx: self.dosya_asagi(i)).pack(side="right", padx=(0, 4))
+            ctk.CTkButton(row, text="↑", width=30, height=26, corner_radius=8,
+                          fg_color=c["del_fg"], text_color=c["del_text"], hover_color=c["del_hover"],
+                          font=ctk.CTkFont(size=12, weight="bold"),
+                          command=lambda i=idx: self.dosya_yukari(i)).pack(side="right", padx=(0, 4))
+            ctk.CTkButton(row, text="👁", width=34, height=26, corner_radius=8,
+                          fg_color=c["del_fg"], text_color=c["del_text"], hover_color=c["del_hover"],
+                          font=ctk.CTkFont(size=13),
+                          command=lambda i=idx: self.onizle_ac(i)).pack(side="right", padx=(0, 4))
 
     def dosya_sil(self, idx):
         if 0 <= idx < len(self.pdf_dosyalari):
             self.pdf_dosyalari.pop(idx)
             self.liste_guncelle()
 
+    def dosya_yukari(self, idx):
+        if 1 <= idx < len(self.pdf_dosyalari):
+            self.pdf_dosyalari[idx - 1], self.pdf_dosyalari[idx] = \
+                self.pdf_dosyalari[idx], self.pdf_dosyalari[idx - 1]
+            self.liste_guncelle()
+
+    def dosya_asagi(self, idx):
+        if 0 <= idx < len(self.pdf_dosyalari) - 1:
+            self.pdf_dosyalari[idx + 1], self.pdf_dosyalari[idx] = \
+                self.pdf_dosyalari[idx], self.pdf_dosyalari[idx + 1]
+            self.liste_guncelle()
+
+    def onizle_ac(self, idx):
+        if pymupdf is None:
+            messagebox.showerror(self.t("err_title"), self.t("err_preview"))
+            return
+        if not (0 <= idx < len(self.pdf_dosyalari)):
+            return
+        yol = self.pdf_dosyalari[idx]
+        try:
+            toplam = len(PdfReader(yol).pages)
+        except Exception:
+            messagebox.showerror(self.t("err_title"), self.t("err_preview"))
+            return
+        if toplam == 0:
+            messagebox.showwarning(
+                self.t("warn_title"),
+                self.t("log_no_pages", name=os.path.basename(yol)),
+            )
+            return
+        top = ctk.CTkToplevel(self)
+        top.title(self.t("preview_title", name=os.path.basename(yol)))
+        top.geometry("600x480")
+        top.minsize(440, 360)
+        lbl = ctk.CTkLabel(top, text=self.t("preview_loading"), text_color="gray50")
+        lbl.pack(pady=12)
+        scroll = ctk.CTkScrollableFrame(top, corner_radius=10)
+        scroll.pack(fill="both", expand=True, padx=16, pady=(0, 8))
+        footer = ctk.CTkLabel(top, text="", text_color="gray50", font=ctk.CTkFont(size=11))
+        footer.pack(pady=(0, 10))
+        limit = min(toplam, 12)
+
+        def render():
+            imgs = None
+            try:
+                doc = pymupdf.open(yol)
+                out = []
+                for i in range(limit):
+                    page = doc[i]
+                    zoom = 150 / max(1, page.rect.width)
+                    pix = page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom))
+                    out.append((i + 1, pix.tobytes("png"), pix.width, pix.height))
+                doc.close()
+                imgs = out
+            except Exception:
+                imgs = None
+            self.after(0, lambda: self._preview_doldur(top, scroll, lbl, footer, imgs, toplam, limit))
+
+        threading.Thread(target=render, daemon=True).start()
+
+    def _preview_doldur(self, top, scroll, lbl, footer, imgs, toplam, limit):
+        try:
+            alive = bool(top.winfo_exists())
+        except Exception:
+            alive = False
+        if not alive:
+            return
+        lbl.pack_forget()
+        if not imgs:
+            lbl.configure(text=self.t("err_preview"))
+            lbl.pack(pady=12)
+            return
+        top._imgs = []
+        cols = 3
+        for k, (pno, png, w, h) in enumerate(imgs):
+            img = Image.open(BytesIO(png))
+            th = max(1, int(150 * h / max(1, w)))
+            cimg = ctk.CTkImage(light_image=img, dark_image=img, size=(150, th))
+            top._imgs.append(cimg)
+            cell = ctk.CTkFrame(scroll, fg_color="transparent")
+            cell.grid(row=k // cols, column=k % cols, padx=8, pady=8)
+            ctk.CTkLabel(cell, text="", image=cimg).pack()
+            ctk.CTkLabel(cell, text=str(pno), text_color="gray50",
+                         font=ctk.CTkFont(size=11)).pack()
+        if toplam > limit:
+            footer.configure(text=self.t("preview_more", n=toplam - limit))
+
     def ayir_baslat(self):
         if not self.pdf_dosyalari:
             messagebox.showwarning(self.t("warn_title"), self.t("warn_no_pdf"))
             return
+        if self.mode == "merge":
+            if len(self.pdf_dosyalari) < 2:
+                messagebox.showerror(self.t("err_title"), self.t("err_need_two"))
+                return
+            ad = self.entry_merge.get().strip() or self.t("merge_default")
+            if not ad.lower().endswith(".pdf"):
+                ad += ".pdf"
+            self._merge_name = ad
         # mod girdilerini önden doğrula
         if self.mode == "chunk":
             try:
@@ -828,6 +1015,9 @@ class PdfAyiriciApp(ctk.CTk, TkinterDnD.DnDWrapper if TkinterDnD else object):
         toplam_sayfa = 0
         hata = 0
         mode, n, groups = self.mode, self._n, self._range_groups
+        if mode == "merge":
+            self._birlestir_thread()
+            return
         for idx, dosya_yolu in enumerate(list(self.pdf_dosyalari)):
             try:
                 ad = Path(dosya_yolu).stem
@@ -881,23 +1071,74 @@ class PdfAyiriciApp(ctk.CTk, TkinterDnD.DnDWrapper if TkinterDnD else object):
             prog = (idx + 1) / toplam_pdf
             self.after(0, lambda p=prog: self.progress.set(p))
 
-        def bitir():
-            self._islem_sirada = False
-            self.btn_ayir.configure(state="normal", text=self.t("split"))
-            self.progress.set(1 if hata == 0 else 0.85)
-            if hata == 0:
-                self.lbl_durum.configure(text=self.t("done_ok", n=toplam_sayfa))
-                messagebox.showinfo(
-                    self.t("success_title"),
-                    self.t("success_msg", pdf=toplam_pdf, pages=toplam_sayfa, out=self.cikti_klasoru),
-                )
-            else:
-                self.lbl_durum.configure(text=self.t("done_err", e=hata, n=toplam_sayfa))
-                messagebox.showwarning(
-                    self.t("finished_title"),
-                    self.t("finished_msg", pages=toplam_sayfa, err=hata, out=self.cikti_klasoru),
-                )
-        self.after(0, bitir)
+    def _birlestir_thread(self):
+        """Birleştirme modu: listedeki sırayla tek PDF üretir."""
+        dosyalar = list(self.pdf_dosyalari)
+        toplam_pdf = len(dosyalar)
+        toplam_sayfa = 0
+        hata = 0
+        ok = 0
+        writer = PdfWriter()
+        for idx, dosya_yolu in enumerate(dosyalar):
+            try:
+                ad = Path(dosya_yolu).stem
+                self.after(0, lambda m=self.t("processing", name=ad): self.lbl_durum.configure(text=m))
+                self.after(0, lambda m=self.t("log_processing", name=ad): self.log_yaz(m))
+
+                reader = PdfReader(dosya_yolu)
+                if reader.is_encrypted:
+                    try:
+                        reader.decrypt("")
+                    except Exception:
+                        self.after(0, lambda a=ad: self.log_yaz(self.t("log_encrypted", name=a)))
+                        hata += 1
+                        continue
+                if len(reader.pages) == 0:
+                    self.after(0, lambda a=ad: self.log_yaz(self.t("log_no_pages", name=a)))
+                    continue
+                for page in reader.pages:
+                    writer.add_page(page)
+                toplam_sayfa += len(reader.pages)
+                ok += 1
+            except Exception as e:
+                hata += 1
+                self.after(0, lambda a=ad, err=str(e):
+                           self.log_yaz(self.t("log_error", name=a, err=err)))
+            prog = (idx + 1) / toplam_pdf
+            self.after(0, lambda p=prog: self.progress.set(p))
+
+        if ok > 0 and toplam_sayfa > 0:
+            try:
+                hedef = Path(self.cikti_klasoru) / self._merge_name
+                with open(hedef, "wb") as out:
+                    writer.write(out)
+                self.after(0, lambda: self.log_yaz(
+                    self.t("log_merged", n=ok, pages=toplam_sayfa, dest=str(hedef))))
+            except Exception as e:
+                hata += 1
+                self.after(0, lambda err=str(e):
+                           self.log_yaz(self.t("log_error", name="-", err=err)))
+        self.after(0, lambda: self._bitir(toplam_pdf, toplam_sayfa, hata))
+
+    def _bitir(self, toplam_pdf, toplam_sayfa, hata):
+        self._islem_sirada = False
+        self.btn_ayir.configure(
+            state="normal",
+            text=self.t("merge_btn") if self.mode == "merge" else self.t("split"),
+        )
+        self.progress.set(1 if hata == 0 else 0.85)
+        if hata == 0:
+            self.lbl_durum.configure(text=self.t("done_ok", n=toplam_sayfa))
+            messagebox.showinfo(
+                self.t("success_title"),
+                self.t("success_msg", pdf=toplam_pdf, pages=toplam_sayfa, out=self.cikti_klasoru),
+            )
+        else:
+            self.lbl_durum.configure(text=self.t("done_err", e=hata, n=toplam_sayfa))
+            messagebox.showwarning(
+                self.t("finished_title"),
+                self.t("finished_msg", pages=toplam_sayfa, err=hata, out=self.cikti_klasoru),
+            )
 
 
 if __name__ == "__main__":

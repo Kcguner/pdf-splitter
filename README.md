@@ -24,6 +24,9 @@
 - ✂️ **Split modes** — Page by page, every N pages, or custom ranges (`1-5, 8, 10-12`)
 - 🖱️ **Drag & drop** — Drop PDF files onto the window to add them
 - 📂 **Open output folder** — One-click button, and your last folder is remembered
+- 🔗 **Merge PDFs** — Combine the list into a single PDF, in your order
+- 👁 **Page preview** — Thumbnail preview popup per file (first 12 pages)
+- ↕️ **Reorder list** — Move files up/down to set the merge order
 - 📦 **Batch processing** — Select multiple PDFs and split them in one go
 - 📁 **Smart output** — Automatic `name_pages/` folder per PDF (optional)
 - 👀 **Page preview** — See the page count as soon as you add files
@@ -81,6 +84,9 @@ python pdf_ayirici.py
 ```
 pypdf>=5.0
 customtkinter>=5.2.0
+tkinterdnd2>=0.3.0
+pymupdf>=1.24.0
+pillow>=10.0.0
 ```
 
 Python **3.10+** recommended. Tkinter ships with most Python installations.
@@ -129,8 +135,7 @@ Contributions welcome! 🧡
 Use [Issues](../../issues) for suggestions / bug reports.
 
 Ideas:
-- [ ] Drag & drop PDF adding
-- [ ] Page-range selection (e.g. 1-5, 10-12)
+- [ ] Password prompt for encrypted PDFs
 - [ ] More languages
 
 ## 📝 License
@@ -157,6 +162,9 @@ If it helped you, leave a star — it motivates! ⭐
 - ✂️ **Bölme modları** — Sayfa sayfa, her N sayfada veya özel aralık (`1-5, 8, 10-12`)
 - 🖱️ **Sürükle-bırak** — PDF'leri pencereye sürükleyip listeye ekleme
 - 📂 **Klasörü aç** — Tek tıkla çıktı klasörü, son klasör hatırlanır
+- 🔗 **PDF birleştirme** — Listeyi seçtiğin sırada tek PDF yapma
+- 👁 **Sayfa önizleme** — Dosya başına küçük resimli önizleme penceresi (ilk 12 sayfa)
+- ↕️ **Liste sıralama** — Birleştirme sırası için dosyaları yukarı/aşağı taşıma
 - 📦 **Toplu işlem** — Birden fazla PDF seçip tek seferde ayırın
 - 📁 **Akıllı çıktı** — Her PDF için otomatik `ad_sayfalar/` klasörü (isteğe bağlı)
 - 👀 **Sayfa önizleme** — Listeye ekler eklemez sayfa sayısını görün
@@ -214,6 +222,9 @@ python pdf_ayirici.py
 ```
 pypdf>=5.0
 customtkinter>=5.2.0
+tkinterdnd2>=0.3.0
+pymupdf>=1.24.0
+pillow>=10.0.0
 ```
 
 Python **3.10+** önerilir. Tkinter çoğu Python kurulumuyla birlikte gelir.
@@ -250,8 +261,7 @@ Katkılara açık! 🧡
 Öneri / hata bildirimi için [Issues](../../issues) sekmesini kullanın.
 
 Fikirler:
-- [ ] Sürükle-bırak ile PDF ekleme
-- [ ] Sayfa aralığı seçme (örn. 1-5, 10-12)
+- [ ] Şifreli PDF için şifre sorma
 - [ ] Daha fazla dil
 
 ## 📝 Lisans
